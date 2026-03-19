@@ -29,3 +29,7 @@ compile_commands.json
 .vs/
 x64/
 *.vcxproj.user
+
+#vim
+*~
+.*.un~
