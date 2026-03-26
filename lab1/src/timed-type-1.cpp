@@ -179,8 +179,6 @@ int main(int argc, char *argv[]) {
 
     vector<double> localA(localRows * N);
 
-    // Формально это локальная инициализация, не MPI и не "чистая последовательная часть алгоритма".
-    // Но если хочешь, можно НЕ включать её в seqTime.
     fillLocalMat(localA, N, localRows, rowStart);
 
     vector<double> b(N, static_cast<double>(N + 1));
