@@ -53,16 +53,12 @@ vector<double> simpleIterationMethodOMPv2(
             }
         }
 
-        #pragma omp barrier
-
         for (int iter = 0; iter < maxIterations && !converged; ++iter) {
 
             #pragma omp single
             {
                 residualSum = 0.0;
             }
-
-            #pragma omp barrier
 
             #pragma omp for reduction(+:residualSum) schedule(runtime)
             for (int i = 0; i < N; ++i) {
@@ -83,14 +79,12 @@ vector<double> simpleIterationMethodOMPv2(
                 converged = (criterion < epsilon);
             }
 
-            #pragma omp barrier
-
             #pragma omp for schedule(runtime)
             for (int i = 0; i < N; ++i) {
                 x[i] = xNew[i];
             }
 
-        #pragma omp barrier
+            #pragma omp barrier
         }
     }
     if (converged) {
