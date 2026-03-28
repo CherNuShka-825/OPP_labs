@@ -7,7 +7,7 @@
 using namespace std;
 
 void fillMat(vector<double>& A, int N) {
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
             if (i == j) {
@@ -30,41 +30,42 @@ vector<double> simpleIterationMethodOMPv1(
     vector<double> x(N, 0.0);
     vector<double> xNew(N, 0.0);
 
-    double normTmp = 0.0;
-
-    #pragma omp parallel for reduction(+:normTmp) schedule(runtime)
-    for (int i = 0; i < N; ++i) {
-        normTmp += b[i] * b[i];
-    }
-
-    double normB = (normTmp == 0.0) ? 1.0 : sqrt(normTmp);
-
     bool converged = false;
     int iterationsDone = 0;
 
+    double normB2 = 0.0;
+    double normB;
+    double residualSum = 0.0;
+
+    #pragma omp parallel for reduction(+:normB2) schedule(runtime)
+    for (int i = 0; i < N; ++i) {
+        normB2 += b[i] * b[i];
+    }
+
+    if (normB2 == 0.0) {
+        normB = 1.0;
+    } else {
+        normB = sqrt(normB2);
+    }
+
     for (int iter = 0; iter < maxIterations && !converged; ++iter) {
-        double residualSum = 0.0;
+        residualSum = 0.0;
 
         #pragma omp parallel for reduction(+:residualSum) schedule(runtime)
         for (int i = 0; i < N; ++i) {
             double Ax_i = 0.0;
-
             for (int j = 0; j < N; ++j) {
                 Ax_i += A[i * N + j] * x[j];
             }
 
             double residual = Ax_i - b[i];
             residualSum += residual * residual;
-
             xNew[i] = x[i] - tau * residual;
         }
 
         double criterion = sqrt(residualSum) / normB;
         iterationsDone = iter + 1;
-
-        if (criterion < epsilon) {
-            converged = true;
-        }
+        converged = (criterion < epsilon);
 
         #pragma omp parallel for schedule(runtime)
         for (int i = 0; i < N; ++i) {
